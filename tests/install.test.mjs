@@ -35,7 +35,7 @@ test('fresh install, guarded replacement, config preservation and backups', () =
     assert.equal(fs.readFileSync(path.join(backups, oldAgents, 'local-note.txt'), 'utf8'), 'keep this local edit');
     assert.equal(fs.existsSync(path.join(installed, 'local-note.txt')), false);
     const rules = fs.readFileSync(path.join(home, '.config/cc-deep-review/setup/cc-deep-review.rules'), 'utf8');
-    assert.ok(rules.includes(JSON.stringify(path.join(installed, 'scripts/launch-run-reviewer.sh').replaceAll('\\', '/'))));
+    assert.ok(rules.includes(JSON.stringify(path.join(fs.realpathSync(installed), 'scripts/launch-run-reviewer.sh').replaceAll('\\', '/'))));
     assert.ok(!rules.includes('"bash", "-c"'));
     const settings = JSON.parse(fs.readFileSync(path.join(home, '.config/cc-deep-review/setup/claude-settings.json'), 'utf8'));
     assert.equal(settings.env.BASH_MAX_TIMEOUT_MS, '2400000');
