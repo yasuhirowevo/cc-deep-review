@@ -837,6 +837,13 @@ WAVE_TEST_DELAY_1=0.1 WAVE_TEST_STATE="$T/state" \
     > "$T/claim-current.out" 2>&1 &
 CLAIM_CURRENT_PID=$!
 wait_for_json "$CLAIM_STATUS" '.lead.process.startedAt != null' || true
+# Claiming the role precedes creation of its artifact directory. Let the pair
+# create that directory before write_adjudication's mkdir -p can race with it.
+if ! wait_for_file "$ARTIFACT_CLAIM/phase4/round-1/attempt-1/claude.out"; then
+  cat "$T/claim-current.out" >&2
+  ng "the replacement pair creates its artifacts before adjudication"
+  exit 1
+fi
 write_adjudication "$ARTIFACT_CLAIM" wave-claim 1 false
 node "$T/tooling/scripts/review-wave-state.mjs" decide \
   --context "$CONTEXT_CLAIM" --status "$CLAIM_STATUS" \
