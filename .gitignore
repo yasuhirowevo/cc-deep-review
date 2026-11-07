@@ -1,0 +1,7 @@
+_tmp/
+work/
+node_modules/
+reviewer.env
+*.log
+.DS_Store
+Thumbs.db
