@@ -76,8 +76,6 @@ After your host refreshes its skill list, use the skill in a new session.
 
 ## Usage
 
-Exclude `/tmp/reviews/` from Git in the target repository using `.gitignore` or `.git/info/exclude` before running a review.
-
 Open the Git repository you want to review and ask the agent:
 
 ```text

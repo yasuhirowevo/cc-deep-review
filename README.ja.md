@@ -76,8 +76,6 @@ node scripts/install.mjs --target both
 
 ## 使い方
 
-レビュー実行前に、対象リポジトリの `.gitignore` または `.git/info/exclude` で `/tmp/reviews/` をGitの追跡対象から除外してください。
-
 レビュー対象のGitリポジトリを開き、エージェントへ指示します。
 
 ```text
