@@ -39,8 +39,10 @@ jobs:
           - test-review-finding-parser.mjs
           - test-adjudication-invariants.mjs
           - test-final-findings.sh
+          - test-large-review-blobs.mjs
           - test-review-run-artifacts.sh
           - test-review-pair.sh
+          - test-wave-lock-races.mjs
           - test-review-wave.sh
           - test-claude-review-runner.sh
           - test-claude-review-attestation.sh

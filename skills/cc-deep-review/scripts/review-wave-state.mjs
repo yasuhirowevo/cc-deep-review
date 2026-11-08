@@ -91,8 +91,9 @@ function assertRegularFile(filePath, label, requireNonEmpty = false) {
 
 function readJson(filePath, label) {
   const realFilePath = assertRegularFile(filePath, label, true);
+  const content = readFileSync(realFilePath, "utf8");
   try {
-    return JSON.parse(readFileSync(realFilePath, "utf8"));
+    return JSON.parse(content);
   } catch {
     fail(`${label} is invalid JSON`);
   }
@@ -221,9 +222,16 @@ function recoverDeadLock(lockPath) {
       existingRecovery !== null &&
       !lockOwnerIsAlive(existingRecovery.pid)
     ) {
-      fail(
-        `stale wave recovery lock requires manual verification: ${recoveryPath}`,
-      );
+      const confirmedRecovery = tryReadLockMetadata(recoveryPath);
+      if (
+        confirmedRecovery !== null &&
+        confirmedRecovery.pid === existingRecovery.pid &&
+        confirmedRecovery.nonce === existingRecovery.nonce
+      ) {
+        fail(
+          `stale wave recovery lock requires manual verification: ${recoveryPath}`,
+        );
+      }
     }
     return false;
   }

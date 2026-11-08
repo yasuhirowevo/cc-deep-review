@@ -15,7 +15,8 @@ import path from "node:path";
 import { TextDecoder } from "node:util";
 
 const REVIEW_DIFF_MAX_BYTES = 64 * 1024 * 1024;
-const TEXT_BLOB_MAX_BYTES = 2 * 1024 * 1024;
+// Changed blobs are bounded separately from unchanged snapshot context.
+const TEXT_BLOB_MAX_BYTES = 16 * 1024 * 1024;
 const TEXT_INSPECTION_MAX_BYTES = 64 * 1024 * 1024;
 const REVIEW_PATH_MAX = 10_000;
 const GIT_OUTPUT_MAX_BYTES = 128 * 1024 * 1024;

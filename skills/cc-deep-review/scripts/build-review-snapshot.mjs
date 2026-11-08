@@ -21,6 +21,7 @@ import { TextDecoder } from "node:util";
 import { toBashAbsolutePath } from "./path-interop.mjs";
 
 const REVIEW_BLOB_MAX_BYTES = 2 * 1024 * 1024;
+const REVIEW_CHANGED_BLOB_MAX_BYTES = 16 * 1024 * 1024;
 const REVIEW_TOTAL_MAX_BYTES = 256 * 1024 * 1024;
 const REVIEW_ENTRY_MAX = 10_000;
 const REVIEW_PATH_MAX_BYTES = 4 * 1024 * 1024;
@@ -521,6 +522,7 @@ const changedPaths = new Set(
     ]),
   ),
 );
+const changedBlobPaths = new Set(changedPaths);
 for (const relatedPath of args.related) {
   changedPaths.add(decodePath(Buffer.from(relatedPath, "utf8")));
 }
@@ -597,7 +599,10 @@ for (const entry of selected) {
   if (entry.type !== "blob" || entry.size === null) {
     fail(`unsupported git object: ${entry.reviewPath}`);
   }
-  if (entry.size > REVIEW_BLOB_MAX_BYTES) {
+  const blobLimit = changedBlobPaths.has(entry.reviewPath)
+    ? REVIEW_CHANGED_BLOB_MAX_BYTES
+    : REVIEW_BLOB_MAX_BYTES;
+  if (entry.size > blobLimit) {
     omittedBlobs.push({ ...entry, reason: "individual-byte-limit" });
     continue;
   }
