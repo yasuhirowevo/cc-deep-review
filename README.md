@@ -1,80 +1,82 @@
 # cc-deep-review
 
-Claude Code / Codexによる独立レビューを、指摘の検証と収束確認まで進めるAgent Skillです。
+English | [日本語](README.ja.md)
 
-PRまたはコミット済みブランチを固定した入力でレビューし、指摘を実コードと照合します。新しいセッションでレビューを繰り返し、最終的な指摘が連続2ラウンド変わらなくなるか、最大20ラウンドに達した時点で結果をまとめます。
+An Agent Skill that runs independent Claude Code / Codex reviews, validates findings, and repeats reviews until the findings stabilize.
 
-- Claude Code・Codexのどちらからも起動できます。
-- 外部reviewerはClaude・Codexの両方、または片方を設定で選べます。
-- 重要度と「今回のPRでどう扱うか」を分けて報告します。
-- 固定SHA・入力digest・実行記録を保存し、失敗や未完了を指摘0件として扱いません。
-- 対象コードを変更せず、レビュー成果物を対象リポジトリの `_tmp/reviews/` に保存します。
+It reviews a pull request or a committed branch against fixed inputs and checks findings against the code. Reviews run in fresh sessions until the final findings remain unchanged for two consecutive rounds, or the process reaches the limit of 20 rounds.
 
-## 必要なもの
+- Invoke the skill from either Claude Code or Codex.
+- Configure Claude, Codex, or both as external reviewers.
+- Report issue severity separately from how each finding should be handled in the current PR.
+- Preserve commit SHAs, input digests, and execution records. Failed or incomplete reviews are never treated as zero findings.
+- Save review artifacts under `_tmp/reviews/` in the target repository without modifying the target code.
 
-- Node.js 24、Git、Bash 4以上、`jq`、`rg`、一般的なUnixコマンド
-- PRモードでは、対象リポジトリへアクセスできる認証済みGitHub CLI（`gh`）
-- 有効にする外部reviewerのCLIと、そのCLIで利用可能なアカウント・モデル
-  - Claude Code: `--safe-mode`、`--model`、`--effort`、Read/Grep/Globのtool制限に対応する版
-  - Codex: `exec`、read-only sandbox、JSON出力に対応する版
-- Claudeを使う場合は `shasum` または `sha256sum`
+## Requirements
 
-実レビューでは、対象コードと差分を選択した外部CLIに渡します。反復回数によって時間・モデル利用量が増えるため、最初は小さいPRまたはブランチで確認してください。
+- Node.js 24, Git, Bash 4 or later, `jq`, `rg`, and standard Unix utilities
+- For PR mode: an authenticated GitHub CLI (`gh`) with access to the target repository
+- The CLI, account, and model required by each enabled external reviewer
+  - Claude Code: a version supporting `--safe-mode`, `--model`, `--effort`, and Read/Grep/Glob tool restrictions
+  - Codex: a version supporting `exec`, the read-only sandbox, and JSON output
+- For Claude: `shasum` or `sha256sum`
 
-WindowsではGit Bashを使用し、エージェントからもGit Bash・Node・`jq`・`gh`・利用するreviewerを解決できるPATHを設定してください。macOSでは、標準のBash 3.2ではなくBash 4以上を使用してください。
+Reviews pass the target code and diff to the selected external CLIs. More rounds can increase runtime and model usage, so start with a small PR or branch.
 
-## 導入
+On Windows, use Git Bash and ensure the agent's PATH includes Git Bash, Node, `jq`, `gh`, and the enabled reviewer CLIs. On macOS, use Bash 4 or later instead of the bundled Bash 3.2.
 
-リポジトリを取得します。privateの間は、アクセス権のあるGitHubアカウントが必要です。
+## Installation
+
+Clone the repository. While it is private, your GitHub account must have access.
 
 ```bash
 gh repo clone yasuhirowevo/cc-deep-review
 cd cc-deep-review
 ```
 
-使用するホストへスキルを配置します。
+Install the skill for your host:
 
 ```bash
-# Codex用: ~/.agents/skills/cc-deep-review/
+# Codex: ~/.agents/skills/cc-deep-review/
 node scripts/install.mjs --target agents
 
-# Claude Code用: ~/.claude/skills/cc-deep-review/
+# Claude Code: ~/.claude/skills/cc-deep-review/
 node scripts/install.mjs --target claude
 
-# 両方へ導入する場合は、上の2つの代わりに実行
+# To install for both, run this instead of the two commands above:
 node scripts/install.mjs --target both
 ```
 
-インストーラーはスキル本体をコピーし、設定ファイルが存在しない場合だけ設定例を作成します。既存のスキルがあるときは、通常の導入を中止します。
+The installer copies the skill and creates an example reviewer configuration only if one does not already exist. A regular installation stops if the skill is already installed.
 
-### 1. reviewerを設定する
+### 1. Configure the reviewers
 
-`~/.config/cc-deep-review/reviewer.env` を編集します。[設定例](config/reviewer.env.example)のモデル・推論設定の空欄を、各CLIで利用できる値に置き換えてください。空欄のままではreviewer起動前に停止します。
+Edit `~/.config/cc-deep-review/reviewer.env`. Replace the empty model and reasoning settings in the [configuration example](config/reviewer.env.example) with values supported by your CLIs. Empty values stop the process before a reviewer starts.
 
-| 設定 | 用途 |
+| Setting | Purpose |
 |---|---|
-| `CLAUDE_REVIEW_ENABLED` | Claudeを使うか。`true` / `false` |
-| `CODEX_REVIEW_ENABLED` | Codexを使うか。`true` / `false` |
-| `CLAUDE_REVIEW_MODEL` / `CLAUDE_REVIEW_EFFORT` | Claude有効時のモデル・推論設定 |
-| `CODEX_REVIEW_MODEL` / `CODEX_REVIEW_REASONING_EFFORT` | Codex有効時のモデル・推論設定 |
+| `CLAUDE_REVIEW_ENABLED` | Enable Claude: `true` / `false` |
+| `CODEX_REVIEW_ENABLED` | Enable Codex: `true` / `false` |
+| `CLAUDE_REVIEW_MODEL` / `CLAUDE_REVIEW_EFFORT` | Model and reasoning effort when Claude is enabled |
+| `CODEX_REVIEW_MODEL` / `CODEX_REVIEW_REASONING_EFFORT` | Model and reasoning effort when Codex is enabled |
 
-片方だけ使う場合は無効側のモデル・推論設定の行を削除するかコメントアウトしてください。両方無効にはできません。環境変数で同じキーを指定すると設定ファイルより優先されます。`DEEP_REVIEW_CONFIG_FILE` で別の設定ファイルを指定することもできます。
+If you use only one reviewer, remove or comment out the model and effort lines for the disabled reviewer. At least one reviewer must be enabled. Environment variables with the same names take precedence over the configuration file. Set `DEEP_REVIEW_CONFIG_FILE` to use a different configuration file.
 
-### 2. ホストを設定する
+### 2. Configure the host
 
-インストーラーは、実際の配置パスを使った設定ファイルを `~/.config/cc-deep-review/setup/` に生成します。
+The installer generates host configuration files under `~/.config/cc-deep-review/setup/` using the actual installation paths.
 
-**Codex:** 固定ランチャーを都度の承認なしで起動したい場合、生成された `cc-deep-review.rules` を `~/.codex/rules/cc-deep-review.rules` として配置します。許可はpreflightと検証付きランチャーの固定パスに限定しています。実行基盤の管理ポリシーは引き続き適用されます。
+**Codex:** To allow the fixed launchers without approving each invocation, place the generated `cc-deep-review.rules` at `~/.codex/rules/cc-deep-review.rules`. These rules allow only the fixed paths for preflight and validated launchers. Managed execution policies still apply.
 
-**Claude Code:** 生成された `claude-settings.json` の `env.BASH_MAX_TIMEOUT_MS` を、自分の `~/.claude/settings.json` の `env` に統合してください。長時間のreviewer実行を待つため、`2400000` ミリ秒を使用します。`permissions.allow` は固定ランチャーの呼び出しを事前許可したい場合に既存配列へ追加します。
+**Claude Code:** Merge `env.BASH_MAX_TIMEOUT_MS` from the generated `claude-settings.json` into the `env` object in your `~/.claude/settings.json`. The value is `2400000` milliseconds to allow long reviewer runs to finish. If you want to preapprove the fixed launchers, append the generated `permissions.allow` entries to your existing array.
 
-設定例で既存の設定ファイル全体を置き換えないでください。インストーラーはホストの設定・許可ルールを自動変更しません。
+Do not replace your entire settings file with the generated example. The installer does not automatically modify host settings or permission rules.
 
-ホストがスキル一覧を更新した後、新しいセッションから使用します。
+After your host refreshes its skill list, use the skill in a new session.
 
-## 使い方
+## Usage
 
-レビュー対象のGitリポジトリを開き、エージェントへ指示します。
+Open the Git repository you want to review and ask the agent:
 
 ```text
 $cc-deep-review 123
@@ -84,38 +86,38 @@ $cc-deep-review https://github.com/OWNER/REPO/pull/123
 $cc-deep-review --branch feature/example --base main
 ```
 
-Claude Codeでは `/cc-deep-review` の呼び出しも使用できます。ブランチモードはコミット済みの内容を対象とし、未コミット変更は含みません。
+In Claude Code, you can also invoke `/cc-deep-review`. Branch mode reviews committed content and excludes uncommitted changes.
 
-レビュー完了時にレポートの絶対パスと所要時間を返します。レポートでは、問題の重要度と今回の取扱いをそれぞれ確認できます。レビュー中のCLI失敗や入力不整合は、未完了として報告されます。
+When the review finishes, the agent returns the report's absolute path and elapsed time. The report separates issue severity from the handling decision for each finding. CLI failures and input inconsistencies are reported as an incomplete review.
 
-詳しい手順は [SKILL.md](skills/cc-deep-review/SKILL.md)、守るべき原則は [CONSTITUTION.md](skills/cc-deep-review/CONSTITUTION.md) を参照してください。
+See [SKILL.md](skills/cc-deep-review/SKILL.md) for the workflow and [CONSTITUTION.md](skills/cc-deep-review/CONSTITUTION.md) for its governing principles. These skill documents are currently written in Japanese.
 
-## 更新・設定管理との併用
+## Updates and configuration management
 
-このリポジトリをスキル本体の更新元とし、個人のdotfiles等ではreviewer設定と導入方法を管理できます。特定の版を使う場合は、このリポジトリのコミットを固定してから導入してください。
+Use this repository as the source for skill updates. You can manage reviewer settings and installation instructions in your personal dotfiles. To install a specific version, check out its commit before running the installer.
 
 ```bash
 git pull --ff-only
 node scripts/install.mjs --target both --replace
 ```
 
-`--replace` は導入済みのスキルを `~/.config/cc-deep-review/backups/` に退避してから更新します。ローカルで編集していた内容もバックアップへ残します。reviewer設定は保持します。更新後は必要に応じて生成済みのホスト設定を反映してください。
+`--replace` backs up the installed skill under `~/.config/cc-deep-review/backups/` before updating it. The backup includes any local edits. Your reviewer configuration is preserved. Apply the generated host configuration again if needed after updating.
 
-インストール先のスキル本体を別のリポジトリでも編集・管理すると、更新元が二重になります。導入済みの本体は生成物として扱い、変更はこのリポジトリへ反映する運用を推奨します。
+Editing and managing the installed skill in another repository creates two sources to maintain. We recommend treating the installed copy as generated content and making changes in this repository.
 
-## 開発・検証
+## Development and testing
 
-外部AIに接続しないテストです。
+These tests do not connect to external AI services:
 
 ```bash
 node --test tests/install.test.mjs
 bash skills/cc-deep-review/scripts/test-regression.sh
 ```
 
-GitHub Actionsでは、導入テストをLinux・macOS・Windowsで、レビューの回帰テストをLinuxで実行します。テスト用のホスト設定を生成するため、開発者の個人設定は不要です。
+GitHub Actions runs installation tests on Linux, macOS, and Windows, and review regression tests on Linux. The tests generate their own host configuration and do not require a developer's personal settings.
 
-Windowsの回帰テストには、Bash製のfake CLIをWin32 Nodeから直接起動できないケースがあります。全体の回帰検証はLinuxで実行してください。実際のモデルを使うsmokeテストの手順は [回帰検証](skills/cc-deep-review/references/regression-verification.md) に記載しています。fake CLIのテスト成功だけでは、外部CLIのバージョン差や実モデルのレビュー品質は保証されません。
+Some regression tests on Windows cannot launch Bash-based fake CLIs directly from Win32 Node. Run the full regression suite on Linux. See [regression verification](skills/cc-deep-review/references/regression-verification.md) for smoke tests using real models. Passing fake-CLI tests alone does not guarantee compatibility with every external CLI version or real-model review quality.
 
-## ライセンス
+## License
 
 [MIT](LICENSE)
