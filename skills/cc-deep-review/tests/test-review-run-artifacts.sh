@@ -1150,13 +1150,13 @@ check "$windows_promoted_path" "/c/review/phase4/round-2/attempt-1/claude.out" \
 windows_context=$(node "$FORMATTER" run-1 \
   'C:\review-temp' \
   'C:\review-temp\deep-review.run-1' \
-  'C:\repository\_tmp\reviews\runs\42\run-1')
+  'C:\repository\tmp\reviews\runs\42\run-1')
 check "$(printf '%s' "$windows_context" | jq -r .reviewTempRoot)" \
   "/c/review-temp" "initializer context normalizes the Windows temp root"
 check "$(printf '%s' "$windows_context" | jq -r .reviewRunRoot)" \
   "/c/review-temp/deep-review.run-1" "initializer context normalizes the Windows run root"
 check "$(printf '%s' "$windows_context" | jq -r .reviewArtifactDir)" \
-  "/c/repository/_tmp/reviews/runs/42/run-1" "initializer context normalizes the Windows artifact root"
+  "/c/repository/tmp/reviews/runs/42/run-1" "initializer context normalizes the Windows artifact root"
 if grep -qF 'toBashAbsolutePath(snapshotRoot)' "$SNAPSHOT_BUILDER"; then
   ok "snapshot builder normalizes its native path before returning to Bash"
 else
@@ -1744,18 +1744,18 @@ if grep -qF 'fixture report B' "$artifact_b/report.md"; then
 else
   ng "second run report remains unchanged"
 fi
-if grep -qF 'fixture report B' "$T/tooling/_tmp/reviews/cc-deep-review-42.md"; then
+if grep -qF 'fixture report B' "$T/tooling/tmp/reviews/cc-deep-review-42.md"; then
   ok "current compatibility alias contains the latest complete report"
 else
   ng "current compatibility alias contains the latest complete report"
 fi
-if grep -qF 'fixture report B' "$T/tooling/_tmp/reviews/pr-42-v2.md"; then
+if grep -qF 'fixture report B' "$T/tooling/tmp/reviews/pr-42-v2.md"; then
   ok "versioned PR compatibility alias contains the latest complete report"
 else
   ng "versioned PR compatibility alias contains the latest complete report"
 fi
-if [ ! -e "$T/tooling/_tmp/reviews/deep-review-42.md" ] &&
-  [ ! -e "$T/tooling/_tmp/reviews/pr-42.md" ]; then
+if [ ! -e "$T/tooling/tmp/reviews/deep-review-42.md" ] &&
+  [ ! -e "$T/tooling/tmp/reviews/pr-42.md" ]; then
   ok "publication uses only the specified report alias paths"
 else
   ng "publication uses only the specified report alias paths"
@@ -1805,8 +1805,8 @@ fi
 node "$PUBLISHER" --tooling-root "$T/tooling" \
   --target branch-feature --run-id "$branch_run_id" --mode full \
   --report-path "$branch_artifact/report.md" >/dev/null
-if [ -f "$T/tooling/_tmp/reviews/cc-deep-review-branch-feature.md" ] &&
-  [ ! -e "$T/tooling/_tmp/reviews/pr-branch-feature.md" ]; then
+if [ -f "$T/tooling/tmp/reviews/cc-deep-review-branch-feature.md" ] &&
+  [ ! -e "$T/tooling/tmp/reviews/pr-branch-feature.md" ]; then
   ok "branch reports use one collision-free human alias without a PR alias"
 else
   ng "branch reports use one collision-free human alias without a PR alias"

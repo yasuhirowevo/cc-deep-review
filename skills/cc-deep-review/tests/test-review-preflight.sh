@@ -302,7 +302,7 @@ run_preflight --project "$STDOUT_REPO" --host codex \
   --branch "$STDOUT_HEAD" --base "$STDOUT_BASE" \
   1>&- 2>"$T/stdout-failure.err"
 stdout_failure_rc=$?
-failed_context=$(find "$STDOUT_REPO/_tmp/reviews/runs" \
+failed_context=$(find "$STDOUT_REPO/tmp/reviews/runs" \
   -type f -name context.json -print -quit 2>/dev/null || true)
 failed_run_root=$(jq -r .reviewRunRoot "$failed_context")
 failed_snapshot=$(jq -r .reviewSnapshotDir "$failed_context")

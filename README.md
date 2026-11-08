@@ -10,7 +10,7 @@ It reviews a pull request or a committed branch against fixed inputs and checks 
 - Configure Claude, Codex, or both as external reviewers.
 - Report issue severity separately from how each finding should be handled in the current PR.
 - Preserve commit SHAs, input digests, and execution records. Failed or incomplete reviews are never treated as zero findings.
-- Save review artifacts under `_tmp/reviews/` in the target repository without modifying the target code.
+- Save review artifacts under `tmp/reviews/` in the target repository without modifying the target code.
 
 ## Requirements
 
@@ -75,6 +75,8 @@ Do not replace your entire settings file with the generated example. The install
 After your host refreshes its skill list, use the skill in a new session.
 
 ## Usage
+
+Exclude `/tmp/reviews/` from Git in the target repository using `.gitignore` or `.git/info/exclude` before running a review.
 
 Open the Git repository you want to review and ask the agent:
 

@@ -746,11 +746,11 @@ receiptで固定した最終snapshotへ再結合し、
 初期snapshotへのfallbackや最終判断後のcomment編集は拒否する。
 `not-checked`でfindingを除外したreportは拒否する。
 不整合または旧schemaのartifactを公開せず、新しいrunで再レビューする。
-固定名`_tmp/reviews/cc-deep-review-<targetSlug>.md`は人向け直近コピー、
-PRモードの`_tmp/reviews/pr-<N>-v2.md`はPR別直近コピーである。
+固定名`tmp/reviews/cc-deep-review-<targetSlug>.md`は人向け直近コピー、
+PRモードの`tmp/reviews/pr-<N>-v2.md`はPR別直近コピーである。
 どちらも同時実行中の別runを追跡する用途には使わない。branchモードはrefを可読化したprefixと
 元refのSHA-256先頭12文字を組み合わせた
-`_tmp/reviews/cc-deep-review-branch-<readableRef>-<digest12>.md`だけを使い、PR互換名を作らない。
+`tmp/reviews/cc-deep-review-branch-<readableRef>-<digest12>.md`だけを使い、PR互換名を作らない。
 `feature/foo`と`feature-foo`のように可読化後が同じになるrefもdigestで区別する。
 
 公開成功直後に、Phase 1でcontextへ固定した開始時刻から所要時間を取得する。
