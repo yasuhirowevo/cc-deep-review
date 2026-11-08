@@ -266,7 +266,7 @@ function main() {
   const toolingRoot = realpathSync(args.toolingRoot);
   const reviewsRoot = assertDirectoryChain(
     toolingRoot,
-    ["_tmp", "reviews"],
+    ["tmp", "reviews"],
     true,
   );
   const runDirectory = assertDirectoryChain(

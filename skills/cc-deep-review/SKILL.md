@@ -76,7 +76,7 @@ review手順・prompt・runnerの正典にはしない。
 - Codexを有効にした場合は、認証済み`codex` CLIを使用できる。
 - Claudeを有効にした場合は、safe modeと設定済みのmodel / effortを使用できる認証済み`claude` CLIを使用できる。
 - 対象worktreeのbranch・HEAD・既存tracked/untracked内容を変更しない。
-  新規の永続書込みは`_tmp/reviews/`配下のreview成果物だけに限定する。
+  新規の永続書込みは`tmp/reviews/`配下のreview成果物だけに限定する。
 - reviewerは対象worktreeを実体として使わず、固定diffとHEAD snapshotだけをレビュー対象にする。
 - 未変更の`.env`、秘密鍵、credentialなど機密性の高いpathはHEAD snapshotへ自動収集しない。
   当該path自体が変更された場合は漏洩検査の対象として扱い、値を最終出力へ逐語転記しない。
@@ -128,7 +128,7 @@ Codexのモデル・推論設定を指定する。Claude Codeから起動した�
 6. **結果を混ぜない**: reviewerへPRコメント・他モデルの結果・既存findingsを渡さない。
 7. **fail closed**: receipt、probe、digest、本文契約の不一致を0件や部分成功として扱わない。
 8. **runを分離**: automationはrun固有`REPORT_PATH`だけを使う。固定名は人向け直近コピーに限る。
-9. **副作用を限定**: 対象worktreeの変更は禁止。永続化するのは`_tmp/reviews/`のreview成果物だけ。
+9. **副作用を限定**: 対象worktreeの変更は禁止。永続化するのは`tmp/reviews/`のreview成果物だけ。
 10. **独立reviewを並列化**: 両方有効な場合は初回reviewでClaude/Codexを同時起動する。fresh収束では、
     次の正典roundと後続投機roundをwaveとして同時起動する。投機出力は直前roundの裁定が
     未収束と確定するまで読まず、収束時は中断または非正典のまま固定する。

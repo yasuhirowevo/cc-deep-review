@@ -116,7 +116,7 @@ ensure_plain_directory() {
   return 1
 }
 
-ARTIFACT_ROOT="$TOOLING_ROOT/_tmp"
+ARTIFACT_ROOT="$TOOLING_ROOT/tmp"
 ensure_plain_directory "$ARTIFACT_ROOT"
 ARTIFACT_ROOT="$ARTIFACT_ROOT/reviews"
 ensure_plain_directory "$ARTIFACT_ROOT"

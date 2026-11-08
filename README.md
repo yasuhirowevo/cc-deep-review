@@ -10,7 +10,7 @@ It reviews a pull request or a committed branch against fixed inputs and checks 
 - Configure Claude, Codex, or both as external reviewers.
 - Report issue severity separately from how each finding should be handled in the current PR.
 - Preserve commit SHAs, input digests, and execution records. Failed or incomplete reviews are never treated as zero findings.
-- Save review artifacts under `_tmp/reviews/` in the target repository without modifying the target code.
+- Save review artifacts under `tmp/reviews/` in the target repository without modifying the target code.
 
 ## Requirements
 
