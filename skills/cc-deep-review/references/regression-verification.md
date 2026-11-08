@@ -19,6 +19,8 @@ fake Claude/Codex CLIと一時Gitリポジトリを使い、外部ネットワ�
 - Claude safe mode、許可/deny tool、private cwd、timeout、resume
 - Claude/Codex input receipt、digest、challenge、diff probe、本文契約
 - `.gitattributes`、replace ref、external diff、textconv、symlink、gitlinkを信用しないsafe diff/snapshot
+- 変更blobは16 MiBまでsafe diff・HEAD snapshotへ含め、境界超過は省略を明示すること。
+  未変更blobの2 MiB上限、機密path除外、binary判定、raw bytes・digest・read-only属性を維持すること
 - tooling snapshot、BASE guidance、run全体integrity
 - trusted preflightによるbranch/PRの固定入力、初期PR context、段階別時刻、失敗伝播、reviewer未起動
 - run IDと成果物の並行分離、原子的なcompatibility copy
@@ -26,6 +28,7 @@ fake Claude/Codex CLIと一時Gitリポジトリを使い、外部ネットワ�
   exit 3側だけのfresh retryと成功側の保持
 - 連続2roundのwave並列起動、投機roundの隔離、昇格、中断、完了済み非採用、昇格後retry/resume
 - leadのfinalize-only resumeと待機中の終了code回復、空wave directoryでの逐次互換性、逐次/wave同時claim
+- recovery lock所有者の正常終了・交代・読込中の消失と、永続するdead owner・不正JSONの拒否
 - dead lockの並行回収、stale reaperのfail-closed、完成済みlock metadataとwave予約の原子的公開、
   予約直後に停止したsupervisorへの安全な再接続、無効roundによる実行mode汚染の防止、中断promotionの再開
 - fork直後の旧childと再接続childによるrole claim競合、開始済みroleを保持した部分wave再接続、
